@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "search",
+    srcs = ["search.go"],
+    importpath = "github.com/ForrestIsARealGoodman/dynamodb/search",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_sirupsen_logrus//:logrus",
+        "@com_github_texttheater_golang_levenshtein_levenshtein//:levenshtein",
+    ],
+)
+
+go_test(
+    name = "search_test",
+    srcs = ["search_test.go"],
+    embed = [":search"],
+    deps = [
+        "@com_github_aws_aws_sdk_go_v2//aws",
+        "@com_github_aws_aws_sdk_go_v2_service_dynamodb//types",
+        "@com_github_stretchr_testify//assert",
+    ],
+)

@@ -1,0 +1,41 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_library(
+    name = "dynamodb_lib",
+    srcs = ["main.go"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_sirupsen_logrus//:logrus",
+        "@com_github_spf13_cobra//:cobra",
+        "@com_github_spf13_viper//:viper",
+    ],
+)
+
+go_binary(
+    name = "dynamodb.linux_amd64",
+    basename = "dynamodb",
+    embed = [":dynamodb_lib"],
+    goarch = "amd64",
+    goos = "linux",
+    visibility = ["//visibility:public"],
+)
+
+go_binary(
+    name = "dynamodb.linux_arm64",
+    basename = "dynamodb",
+    embed = [":dynamodb_lib"],
+    goarch = "arm64",
+    goos = "linux",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "dynamodb_test",
+    srcs = ["main_test.go"],
+    embed = [":dynamodb_lib"],
+    deps = [
+        "@com_github_sirupsen_logrus//:logrus",
+        "@com_github_spf13_viper//:viper",
+        "@com_github_stretchr_testify//assert",
+    ],
+)
