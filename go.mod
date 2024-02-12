@@ -1,6 +1,6 @@
 module github.com/ForrestIsARealGoodman/dynamodb
 
-go 1.22.0
+go 1.21
 
 require (
 	github.com/ForrestIsARealGoodman/dynamodb/client v0.0.0-20240209120041-be69f014abf1
