@@ -1,11 +1,10 @@
-module github.com/ForrestIsARealGoodman/dynamodb
+module github.com/ForrestIsARealGoodman/dynamodb/update
 
 go 1.20
 
 require (
 	github.com/ForrestIsARealGoodman/dynamodb/client v0.0.0-20240213011202-eeb18dccea0c
 	github.com/sirupsen/logrus v1.9.3
-	github.com/texttheater/golang-levenshtein/levenshtein v0.0.0-20200805054039-cae8b0eaed6c
 )
 
 require (
