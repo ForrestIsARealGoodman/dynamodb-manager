@@ -1,6 +1,6 @@
 module github.com/ForrestIsARealGoodman/dynamodb/client
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.24.1
