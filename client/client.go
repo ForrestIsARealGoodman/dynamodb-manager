@@ -1,4 +1,4 @@
-package github.com/ForrestIsARealGoodman/dynamodb/client
+package client
 
 // https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/gov2/dynamodb
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_dynamodb_code_examples.html
