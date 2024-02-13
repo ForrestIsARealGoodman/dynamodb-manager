@@ -1,2 +1,0 @@
-# dynamodb
-remote reference
