@@ -1,9 +1,10 @@
-package logging
+package main
 
 import (
-	"log"
 	"os"
 	"strings"
+	"errors"
+	"fmt"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -16,16 +17,27 @@ type Logger struct {
 }
 
 // NewLogger creates a new logger based on the environment
-func NewLogger(logLevel ...zapcore.Level) (*Logger, error) {
+func NewLogger(level ...string) (*Logger, error) {
 	var cfgLogLevel zapcore.Level = zapcore.InfoLevel
-	if len(logLevel) > 0 {
-		// Use the provided custom configuration
-		cfgLogLevel = logLevel[0]
+	if len(level) > 0 {
+		// Use the provided custom level
+		switch level[0] {
+			case "Debug":
+				cfgLogLevel = zapcore.DebugLevel
+			case "Info":
+				cfgLogLevel = zapcore.InfoLevel
+			case "Warn":
+				cfgLogLevel = zapcore.WarnLevel
+			case "Error":
+				cfgLogLevel = zapcore.ErrorLevel
+			default:
+				return nil, errors.New(fmt.Sprintf("unrecognized level provided:%s", level[0]))
+		}
 	} 
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		log.Printf("error getting hostname info, %v", err)
+		fmt.Printf("error getting hostname info, %v", err)
 	}
 
 	var lConfig zap.Config
@@ -45,7 +57,7 @@ func NewLogger(logLevel ...zapcore.Level) (*Logger, error) {
 
 	logger, err := lConfig.Build(zap.AddCallerSkip(1))
 	if err != nil {
-		log.Printf("error configuring default global logger, %v", err)
+		fmt.Printf("error configuring default global logger, %v", err)
 		return nil, err
 	}
 
