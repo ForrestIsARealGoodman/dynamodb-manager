@@ -1,4 +1,4 @@
-module dynamodb
+module github.com/ForrestIsARealGoodman/dynamodb
 
 go 1.20
 
