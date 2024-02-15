@@ -1,4 +1,4 @@
-module github.com/ForrestIsARealGoodman/dynamodb/clients
+module github.com/ForrestIsARealGoodman/dynamodb/client
 
 go 1.20
 
