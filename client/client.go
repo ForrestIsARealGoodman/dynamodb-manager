@@ -67,7 +67,7 @@ func NewDynamoDBManager(cfg ...aws.Config) (*DynamoDBManager, error) {
 }
 
 func SetupLogger(dbmgr *DynamoDBManager, level string) (error) {
-	loggerObj, err := NewLogger(level)
+	loggerObj, err := logging.NewLogger(level)
 	if err != nil {
 		//fmt.Printf("SetupLogger failed due to:%v",err)
 		return err
