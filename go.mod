@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ForrestIsARealGoodman/dynamodb/client v0.0.0-20240215023607-e9f81f2b3b97
-	github.com/ForrestIsARealGoodman/dynamodb/logging v0.0.0-20240215023114-5d8b2f9364d1
+	github.com/ForrestIsARealGoodman/dynamodb/logging v0.0.0-20240215025527-4412fa0921d8
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/texttheater/golang-levenshtein/levenshtein v0.0.0-20200805054039-cae8b0eaed6c
