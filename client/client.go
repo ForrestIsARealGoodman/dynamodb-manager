@@ -75,7 +75,7 @@ func SetupLogger(dbmgr *DynamoDBManager, level string) (error) {
 	if loggerObj == nil {
 		return errors.New("Failed to setup logger, returned empty!")
 	}
-	dbmgr.Logger = &loggerObj
+	dbmgr.Logger = loggerObj
 	return nil
 }
 
