@@ -1,4 +1,4 @@
-module github.com/ForrestIsARealGoodman/dynamodb-manager
+module github.com/ForrestIsARealGoodman/dynamodb-manager/logging
 
 go 1.21.1
 
