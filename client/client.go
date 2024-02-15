@@ -200,7 +200,7 @@ func UpdateProvisionedCapacity(dbmgr *DynamoDBManager, switchToProvisioned bool,
 	return err
 }
 
-func (dbmgr *DynamoDBManager) SwitchToOnDemandCapacity(tableName string) error {
+func SwitchToOnDemandCapacity(dbmgr *DynamoDBManager, tableName string) error {
 	input := &dynamodb.UpdateTableInput{
 		TableName:   &tableName,
 		BillingMode: types.BillingModePayPerRequest,
