@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/ForrestIsARealGoodman/dynamodb/logging"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/ForrestIsARealGoodman/dynamodb/logging"
 )
 
 var DEFAULT_RCU = 5
@@ -19,7 +20,7 @@ var DEFAULT_WCU = 5
 // DynamoDBManager represents the DynamoDB manager in Go.
 type DynamoDBManager struct {
 	DynamoDBClient *dynamodb.Client // Add DynamoDB client
-	Logger *logging.Logger 
+	Logger         *logging.Logger
 }
 
 var LoadConfig = config.LoadDefaultConfig
@@ -60,13 +61,13 @@ func NewDynamoDBManager(cfg ...aws.Config) (*DynamoDBManager, error) {
 	dbclient := DBNewFromConfig(configToUse)
 	db := DynamoDBManager{
 		DynamoDBClient: dbclient,
-		Logger: nil,
+		Logger:         nil,
 	}
 	fmt.Println("Instantiated dynamoDB manager!")
 	return &db, nil
 }
 
-func SetupLogger(dbmgr *DynamoDBManager, level string) (error) {
+func SetupLogger(dbmgr *DynamoDBManager, level string) error {
 	loggerObj, err := logging.NewLogger(level)
 	if err != nil {
 		//fmt.Printf("SetupLogger failed due to:%v",err)
