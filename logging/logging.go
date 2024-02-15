@@ -1,10 +1,10 @@
 package logging
 
 import (
-	"os"
-	"strings"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -22,18 +22,18 @@ func NewLogger(level ...string) (*Logger, error) {
 	if len(level) > 0 {
 		// Use the provided custom level
 		switch level[0] {
-			case "Debug":
-				cfgLogLevel = zapcore.DebugLevel
-			case "Info":
-				cfgLogLevel = zapcore.InfoLevel
-			case "Warn":
-				cfgLogLevel = zapcore.WarnLevel
-			case "Error":
-				cfgLogLevel = zapcore.ErrorLevel
-			default:
-				return nil, errors.New(fmt.Sprintf("unrecognized level provided:%s", level[0]))
+		case "Debug":
+			cfgLogLevel = zapcore.DebugLevel
+		case "Info":
+			cfgLogLevel = zapcore.InfoLevel
+		case "Warn":
+			cfgLogLevel = zapcore.WarnLevel
+		case "Error":
+			cfgLogLevel = zapcore.ErrorLevel
+		default:
+			return nil, errors.New(fmt.Sprintf("unrecognized level provided:%s", level[0]))
 		}
-	} 
+	}
 
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -108,7 +108,7 @@ func (l Logger) Debugf(msg string, args ...interface{}) {
 // Info wraps Sugar Infof
 func (l Logger) Infof(msg string, args ...interface{}) {
 	sanitized := l.sanitize(msg)
-	l.writer().Sugar().Infof(sanitized, args)
+	l.writer().Sugar().Infof(sanitized, args...)
 }
 
 // Warn wraps Sugar Warnf
