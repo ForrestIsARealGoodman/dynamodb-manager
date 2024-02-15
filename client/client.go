@@ -1,9 +1,5 @@
 package client
 
-// https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/gov2/dynamodb
-// https://docs.aws.amazon.com/code-library/latest/ug/go_2_dynamodb_code_examples.html
-// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/dynamodb
-
 import (
 	"context"
 	"errors"
@@ -14,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	log "github.com/sirupsen/logrus"
+	"github.com/ForrestIsARealGoodman/dynamodb/logging"
 )
 
 var DEFAULT_RCU = 5
@@ -23,6 +19,7 @@ var DEFAULT_WCU = 5
 // DynamoDBManager represents the DynamoDB manager in Go.
 type DynamoDBManager struct {
 	DynamoDBClient *dynamodb.Client // Add DynamoDB client
+	Logger *logging.Logger 
 }
 
 var LoadConfig = config.LoadDefaultConfig
@@ -43,7 +40,7 @@ func CreateNewDynamoDBManager(profileName string) (*DynamoDBManager, error) {
 	}
 
 	if err != nil {
-		log.Errorf("CreateNewDynamoDBManager-config.LoadDefaultConfig:%s", err)
+		fmt.Printf("CreateNewDynamoDBManager-config.LoadDefaultConfig:%s", err)
 		return nil, errors.New("Failed to instantiate dynamoDB manager!")
 	}
 
@@ -63,9 +60,23 @@ func NewDynamoDBManager(cfg ...aws.Config) (*DynamoDBManager, error) {
 	dbclient := DBNewFromConfig(configToUse)
 	db := DynamoDBManager{
 		DynamoDBClient: dbclient,
+		Logger: nil,
 	}
-	log.Debugf("Instantiated dynamoDB manager!")
+	fmt.Println("Instantiated dynamoDB manager!")
 	return &db, nil
+}
+
+func SetupLogger(dbmgr *DynamoDBManager, level string) (error) {
+	loggerObj, err := NewLogger(level)
+	if err != nil {
+		//fmt.Printf("SetupLogger failed due to:%v",err)
+		return err
+	}
+	if loggerObj == nil {
+		return errors.New("Failed to setup logger, returned empty!")
+	}
+	dbmgr.Logger = &loggerObj
+	return nil
 }
 
 func GetTableList(dbmgr *DynamoDBManager) ([]string, error) {
@@ -76,7 +87,7 @@ func GetTableList(dbmgr *DynamoDBManager) ([]string, error) {
 	for tablePaginator.HasMorePages() {
 		output, err = tablePaginator.NextPage(context.TODO())
 		if err != nil {
-			log.Errorf("Couldn't list tables. Here's why: %v\n", err)
+			dbmgr.Logger.Errorf("Couldn't list tables. Here's why: %v\n", err)
 			break
 		} else {
 			tableNames = append(tableNames, output.TableNames...)
@@ -92,7 +103,7 @@ func GetTableArn(dbmgr *DynamoDBManager, tableName string) (string, error) {
 
 	output, err := dbmgr.DynamoDBClient.DescribeTable(context.TODO(), input)
 	if err != nil {
-		log.Errorf("Failed to get Table Arn, Here's why: %v\n", err)
+		dbmgr.Logger.Errorf("Failed to get Table Arn, Here's why: %v\n", err)
 		return "", err
 	}
 	return *output.Table.TableArn, nil
@@ -108,21 +119,21 @@ func GetTableTags(dbmgr *DynamoDBManager, tableArn string) ([]types.Tag, error) 
 	// Call ListTagsOfResource function
 	result, err := dbmgr.DynamoDBClient.ListTagsOfResource(context.TODO(), listTagsInput)
 	if err != nil {
-		log.Fatalf("Error calling ListTagsOfResource:%v", err)
+		dbmgr.Logger.Errorf("Error calling ListTagsOfResource:%v", err)
 		return nil, err
 	}
 
 	return result.Tags, nil
 }
 
-func GetCurrentBillingMode(manager *DynamoDBManager, tableName string) (string, string, string, error) {
+func GetCurrentBillingMode(dbmgr *DynamoDBManager, tableName string) (string, string, string, error) {
 	input := &dynamodb.DescribeTableInput{
 		TableName: &tableName,
 	}
 
 	var rcu, wcu, billingMode string
 
-	output, err := manager.DynamoDBClient.DescribeTable(context.TODO(), input)
+	output, err := dbmgr.DynamoDBClient.DescribeTable(context.TODO(), input)
 	if err != nil {
 		return "", "", "", err
 	}
@@ -139,7 +150,7 @@ func GetCurrentBillingMode(manager *DynamoDBManager, tableName string) (string, 
 	return billingMode, rcu, wcu, nil
 }
 
-func UpdateProvisionedCapacity(manager *DynamoDBManager, switchToProvisioned bool, tableName string, rcuStr string, wcuStr string) error {
+func UpdateProvisionedCapacity(dbmgr *DynamoDBManager, switchToProvisioned bool, tableName string, rcuStr string, wcuStr string) error {
 	var input *dynamodb.UpdateTableInput
 	var rcuVal int64
 	var wcuVal int64
@@ -179,27 +190,27 @@ func UpdateProvisionedCapacity(manager *DynamoDBManager, switchToProvisioned boo
 		}
 	}
 
-	_, err := manager.DynamoDBClient.UpdateTable(context.TODO(), input)
+	_, err := dbmgr.DynamoDBClient.UpdateTable(context.TODO(), input)
 	if err != nil {
-		log.Errorf("Error updating provisioned capacity: %v", err)
+		dbmgr.Logger.Errorf("Error updating provisioned capacity: %v", err)
 	} else {
-		log.Infof("Provisioned capacity updated for table:%s - RCU: %d, WCU: %d", tableName, rcuVal, wcuVal)
+		dbmgr.Logger.Infof("Provisioned capacity updated for table:%s - RCU: %d, WCU: %d", tableName, rcuVal, wcuVal)
 	}
 
 	return err
 }
 
-func SwitchToOnDemandCapacity(manager *DynamoDBManager, tableName string) error {
+func (dbmgr *DynamoDBManager) SwitchToOnDemandCapacity(tableName string) error {
 	input := &dynamodb.UpdateTableInput{
 		TableName:   &tableName,
 		BillingMode: types.BillingModePayPerRequest,
 	}
 
-	_, err := manager.DynamoDBClient.UpdateTable(context.TODO(), input)
+	_, err := dbmgr.DynamoDBClient.UpdateTable(context.TODO(), input)
 	if err != nil {
-		log.Errorf("error switching to on-demand capacity: %v", err)
+		dbmgr.Logger.Errorf("error switching to on-demand capacity: %v", err)
 	} else {
-		log.Infof("Switched to on-demand capacity for table: %s\n", tableName)
+		dbmgr.Logger.Infof("Switched to on-demand capacity for table: %s\n", tableName)
 	}
 
 	return err

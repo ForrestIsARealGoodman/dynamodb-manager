@@ -9,8 +9,7 @@ import (
 
 	"github.com/texttheater/golang-levenshtein/levenshtein"
 	"github.com/ForrestIsARealGoodman/dynamodb/client"
-
-	log "github.com/sirupsen/logrus"
+	"github.com/ForrestIsARealGoodman/dynamodb/logging"
 )
 
 var FUZZY_RATIO = 80
@@ -45,11 +44,11 @@ func FuzzyMatchRatio(str1, str2 string) int {
 	return ratio
 }
 
-func searchTablesByFuzzyName(manager *client.DynamoDBManager, fuzzyName string) []map[string]string {
+func searchTablesByFuzzyName(dbmgr *client.DynamoDBManager, fuzzyName string) []map[string]string {
 	// Get the list of table names
-	tableList, err := GetTableListClient(manager)
+	tableList, err := GetTableListClient(dbmgr)
 	if err != nil {
-		log.Errorf("Error finding DynamoDB tables: %v", err)
+		dbmgr.Logger.Errorf("Error finding DynamoDB tables: %v", err)
 		return nil
 	}
 
@@ -59,14 +58,14 @@ func searchTablesByFuzzyName(manager *client.DynamoDBManager, fuzzyName string) 
 		if !strings.Contains(tableName, fuzzyName) {
 			fuzzyRatio := FuzzyMatchRatio(strings.ToLower(fuzzyName), strings.ToLower(tableName))
 			similarityScore := NormalizeRatio(fuzzyRatio)
-			log.Tracef("Calculating: fuzzyname:%s - tablename:%s - similarityScore: %d\n", strings.ToLower(fuzzyName), strings.ToLower(tableName), similarityScore)
+			dbmgr.Logger.Debugf("Calculating: fuzzyname:%s - tablename:%s - similarityScore: %d\n", strings.ToLower(fuzzyName), strings.ToLower(tableName), similarityScore)
 			if similarityScore < FUZZY_RATIO {
 				continue
 			}
 		}
 		tableArn, err := GetTableArnClient(manager, tableName)
 		if err != nil {
-			log.Warnf("Error getting table ARN: %v", err)
+			dbmgr.Logger.Warnf("Error getting table ARN: %v", err)
 			continue
 		}
 		matchingTables = append(matchingTables, map[string]string{"Name": tableName, "ARN": tableArn})
@@ -75,7 +74,7 @@ func searchTablesByFuzzyName(manager *client.DynamoDBManager, fuzzyName string) 
 	return matchingTables
 }
 
-func searchTablesByTagValue(manager *client.DynamoDBManager, tagValue string, tableList []string) []map[string]string {
+func searchTablesByTagValue(dbmgr *client.DynamoDBManager, tagValue string, tableList []string) []map[string]string {
 	var matchingTables []map[string]string
 	var tableListTag []string
 	var errGetTable error
@@ -86,7 +85,7 @@ func searchTablesByTagValue(manager *client.DynamoDBManager, tagValue string, ta
 	} else {
 		tableListTag, errGetTable = GetTableListClient(manager)
 		if errGetTable != nil {
-			log.Errorf("Error finding DynamoDB tables: %v", errGetTable)
+			dbmgr.Logger.Errorf("Error finding DynamoDB tables: %v", errGetTable)
 			return nil
 		}
 	}
@@ -94,21 +93,21 @@ func searchTablesByTagValue(manager *client.DynamoDBManager, tagValue string, ta
 	// Iterate over the tableList and check tags
 	for _, tableName := range tableListTag {
 		// get arn
-		log.Printf("Check the tags of table name: %s\n", tableName)
+		dbmgr.Logger.Infof("Check the tags of table name: %s\n", tableName)
 		tableArn, err := GetTableArnClient(manager, tableName)
 		if err != nil {
-			log.Warnf("Error getting table ARN: %v", err)
+			dbmgr.Logger.Warnf("Error getting table ARN: %v", err)
 			continue
 		}
 
 		Tags, err_tag := GetTableTagsClient(manager, tableArn)
 		if err_tag != nil {
-			log.Warnf("Get tags for arn:%s, failed due to:%v", tableArn, err_tag)
+			dbmgr.Logger.Warnf("Get tags for arn:%s, failed due to:%v", tableArn, err_tag)
 			continue
 	    }
 		// Check if tagValue matches any tag in the list
 		for _, tag := range Tags {
-			log.Debugf("table_name: %s - tableArn: %s, Key: %s, Value: %s\n", tableName, tableArn, *tag.Key, *tag.Value)
+			dbmgr.Logger.Debugf("table_name: %s - tableArn: %s, Key: %s, Value: %s\n", tableName, tableArn, *tag.Key, *tag.Value)
 			if *tag.Value == tagValue {
 				matchingTables = append(matchingTables, map[string]string{"Name": tableName, "ARN": tableArn})
 				break
@@ -119,10 +118,10 @@ func searchTablesByTagValue(manager *client.DynamoDBManager, tagValue string, ta
 	return matchingTables
 }
 
-func ExecuteSearch(manager *client.DynamoDBManager, tableFuzzyName string, tagValue string) []map[string]string {
+func ExecuteSearch(dbmgr *client.DynamoDBManager, tableFuzzyName string, tagValue string) []map[string]string {
 	var matchingTables []map[string]string
 	if tableFuzzyName != "" && tagValue != "" {
-		log.Infof("Begin to search the matched tables via fuzzy name:%s, tag:%s, ...", tableFuzzyName, tagValue)
+		dbmgr.Logger.Infof("Begin to search the matched tables via fuzzy name:%s, tag:%s, ...", tableFuzzyName, tagValue)
 		fuzzyMatchingTables := []map[string]string{}
 		fuzzyMatchingTables = searchTablesByFuzzyName(manager, tableFuzzyName)
 		var tableList []string
@@ -134,23 +133,23 @@ func ExecuteSearch(manager *client.DynamoDBManager, tableFuzzyName string, tagVa
 		}
 		matchingTables = searchTablesByTagValue(manager, tagValue, tableList)
 	} else if tableFuzzyName != "" {
-		log.Infof("Begin to search the matched tables via fuzzy name:%s, ...", tableFuzzyName)
+		dbmgr.Logger.Infof("Begin to search the matched tables via fuzzy name:%s, ...", tableFuzzyName)
 		matchingTables = searchTablesByFuzzyName(manager, tableFuzzyName)
 	} else if tagValue != "" {
-		log.Infof("Begin to search the matched tables via tag:%s, ...", tagValue)
+		dbmgr.Logger.Infof("Begin to search the matched tables via tag:%s, ...", tagValue)
 		matchingTables = searchTablesByTagValue(manager, tagValue, nil)
 	} else {
-		log.Error("Invalid search conditions: search table name or tag value should not be empty!")
+		dbmgr.Logger.Error("Invalid search conditions: search table name or tag value should not be empty!")
 		return nil
 	}
 
 	if matchingTables == nil || len(matchingTables) == 0 {
-		log.Warnf("Empty search results - please check the search conditions, tableFuzzyName:%s - tagValue:%s", tableFuzzyName, tagValue)
+		dbmgr.Logger.Warnf("Empty search results - please check the search conditions, tableFuzzyName:%s - tagValue:%s", tableFuzzyName, tagValue)
 	}
 
-	log.Info("Search results:")
+	dbmgr.Logger.Info("Search results:")
 	for _, table := range matchingTables {
-		log.Infof("Table Name: %s, ARN: %s\n", table["Name"], table["ARN"])
+		dbmgr.Logger.Infof("Table Name: %s, ARN: %s\n", table["Name"], table["ARN"])
 	}
 
 	return matchingTables

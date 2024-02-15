@@ -3,15 +3,13 @@ module github.com/ForrestIsARealGoodman/dynamodb
 go 1.20
 
 require (
-	github.com/ForrestIsARealGoodman/dynamodb/client v0.0.0-20240213021415-1f7e97c99fa1
+	github.com/ForrestIsARealGoodman/dynamodb/logging v0.0.0-20240214132505-4afad161fd49
 	github.com/aws/aws-sdk-go-v2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.28.0
-	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/texttheater/golang-levenshtein/levenshtein v0.0.0-20200805054039-cae8b0eaed6c
-	go.uber.org/zap v1.26.0
 )
 
 require (
@@ -42,6 +40,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

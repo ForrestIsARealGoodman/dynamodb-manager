@@ -6,13 +6,13 @@ import (
 	"os"
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"dynamodb/client"
-	"dynamodb/search"
-	"dynamodb/update"
+	"github.com/ForrestIsARealGoodman/dynamodb/client"
+	"github.com/ForrestIsARealGoodman/dynamodb/search"
+	"github.com/ForrestIsARealGoodman/dynamodb/update"
+	"github.com/ForrestIsARealGoodman/dynamodb/logging"
 )
 
 // Actions the program can take
@@ -22,6 +22,7 @@ const (
 )
 
 var CreateDynamoDbClient = client.CreateNewDynamoDBManager
+var SetupLoggerClient = client.SetupLogger
 var ExecuteSearchTask = search.ExecuteSearch
 var ExecuteUpdateTask = update.ExecuteUpdate
 
@@ -33,13 +34,13 @@ var wcuValueStr string
 var provisioned bool
 var onDemand bool
 
-var usageStr string = `./dynamodb_manager --search table_name [--profile profile_name] [--level (Debug, Info, Warn, Error, Fatal)]
-./dynamodb_manager --tag tag_value [--profile profile_name] [--level (Debug, Info, Warn, Error, Fatal)]
-./dynamodb_manager --search table_name --tag tag_value [--profile profile_name][--level (Debug, Info, Warn, Error, Fatal)]
-./dynamodb_manager --update table_name --rcu rcu_value --wcu wcu_value [--profile profile_name] [--level (Debug, Info, Warn, Error, Fatal)]
-./dynamodb_manager --update table_name --provisioned [--profile profile_name] [--level (Debug, Info, Warn, Error, Fatal)]
-./dynamodb_manager --update table_name --ondemand [--profile profile_name] [--level (Debug, Info, Warn, Error, Fatal)]
-./dynamodb_manager --update table_name --provisioned --rcu rcu_value --wcu wcu_value [--profile profile_name] [--level (Debug, Info, Warn, Error, Fatal)]`
+var usageStr string = `./dynamodb_manager --search table_name [--profile profile_name] [--level (Debug, Info, Warn, Error)]
+./dynamodb_manager --tag tag_value [--profile profile_name] [--level (Debug, Info, Warn, Error)]
+./dynamodb_manager --search table_name --tag tag_value [--profile profile_name][--level (Debug, Info, Warn, Error)]
+./dynamodb_manager --update table_name --rcu rcu_value --wcu wcu_value [--profile profile_name] [--level (Debug, Info, Warn, Error)]
+./dynamodb_manager --update table_name --provisioned [--profile profile_name] [--level (Debug, Info, Warn, Error)]
+./dynamodb_manager --update table_name --ondemand [--profile profile_name] [--level (Debug, Info, Warn, Error)]
+./dynamodb_manager --update table_name --provisioned --rcu rcu_value --wcu wcu_value [--profile profile_name] [--level (Debug, Info, Warn, Error)]`
 
 var rootCmd = &cobra.Command{
 	Use:   usageStr,
@@ -95,15 +96,15 @@ func checkCommand() error {
 	return nil
 }
 
-func dumpParams() {
-	log.Debugf("Debug info - passed args listed here:")
-	log.Debugf("Search Term: %s\n", searchTerm)
-	log.Debugf("Tag Value: %s\n", tagValue)
-	log.Debugf("Update Table: %s\n", updateTable)
-	log.Debugf("RCU Value: %s\n", rcuValueStr)
-	log.Debugf("WCU Value: %s\n", wcuValueStr)
-	log.Debugf("Provisioned: %t\n", provisioned)
-	log.Debugf("On-Demand: %t\n", onDemand)
+func dumpParams(dbmgr *client.DynamoDBManager) {
+	dbmgr.Logger.Debugf("Debug info - passed args listed here:")
+	dbmgr.Logger.Debugf("Search Term: %s\n", searchTerm)
+	dbmgr.Logger.Debugf("Tag Value: %s\n", tagValue)
+	dbmgr.Logger.Debugf("Update Table: %s\n", updateTable)
+	dbmgr.Logger.Debugf("RCU Value: %s\n", rcuValueStr)
+	dbmgr.Logger.Debugf("WCU Value: %s\n", wcuValueStr)
+	dbmgr.Logger.Debugf("Provisioned: %t\n", provisioned)
+	dbmgr.Logger.Debugf("On-Demand: %t\n", onDemand)
 }
 
 func initCommand() error {
@@ -130,13 +131,7 @@ func initCommand() error {
 }
 
 // run configures and executes program's workflow.
-func run(action string) error {
-
-	dbmgr, err := CreateDynamoDbClient(viper.GetString("profile"))
-	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to create DynamoDB client due to: %v", err))
-	}
-
+func run(dbmgr *client.DynamoDBManager, action string) error {
 	switch action {
 	case Search:
 		ExecuteSearchTask(dbmgr, viper.GetString("search"), viper.GetString("tag"))
@@ -144,26 +139,6 @@ func run(action string) error {
 		ExecuteUpdateTask(dbmgr, viper.GetString("update"), viper.GetString("rcu"), viper.GetString("wcu"), viper.GetBool("ondemand"), viper.GetBool("provisioned"))
 	default:
 		return errors.New(fmt.Sprintf("unrecognized action provided:%s", action))
-	}
-	return nil
-}
-
-// setupLoggers configure debug, info, and error loggers that write to stderr. The level
-// can be used to control the verbosity of output.
-func setupLoggers(level string) error {
-	log.SetFormatter(&log.TextFormatter{
-		DisableColors:    false,
-		FullTimestamp:    true,
-		TimestampFormat:  "2006-01-02T15:04:05-0700",
-		PadLevelText:     true,
-		QuoteEmptyFields: true,
-	})
-	if level == "" {
-		log.SetLevel(log.InfoLevel)
-	} else if logLevel, err := log.ParseLevel(level); err == nil {
-		log.SetLevel(logLevel)
-	} else {
-		return errors.New("failed to configure logging for the program")
 	}
 	return nil
 }
@@ -176,12 +151,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	err_log := setupLoggers(viper.GetString("level"))
-	if err_log != nil {
-		log.Warnf("Failed to set the log level due to: %v", err_log)
+	dbmgr, err := CreateDynamoDbClient(viper.GetString("profile"))
+	if err != nil {
+		fmt.Printf("Failed to create DynamoDB client due to: %v", err)
+		os.Exit(1)
 	}
 
-	dumpParams()
+	err = SetupLoggerClient(dbmgr, viper.GetString("level"))
+	if err != nil {
+		fmt.Printf("SetupLogger failed due to:%v",err)
+		os.Exit(1)
+	}
+
+	dumpParams(dbmgr)
 
 	if viper.GetString("update") != "" {
 		err := run("update")
