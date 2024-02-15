@@ -3,7 +3,7 @@ module github.com/ForrestIsARealGoodman/dynamodb
 go 1.20
 
 require (
-	github.com/ForrestIsARealGoodman/dynamodb/client v0.0.0-20240215023607-e9f81f2b3b97
+	github.com/ForrestIsARealGoodman/dynamodb/client v0.0.0-20240215030421-030bf4e4e146
 	github.com/ForrestIsARealGoodman/dynamodb/logging v0.0.0-20240215025527-4412fa0921d8
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
