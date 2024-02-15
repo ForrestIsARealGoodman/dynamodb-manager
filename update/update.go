@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/ForrestIsARealGoodman/dynamodb/client"
-	"github.com/ForrestIsARealGoodman/dynamodb/logging"
 )
 
 var SwitchToOnDemandCapacityClient = client.SwitchToOnDemandCapacity
@@ -17,7 +16,7 @@ var UpdateProvisionedCapacityClient = client.UpdateProvisionedCapacity
 var GetCurrentBillingModeClient = client.GetCurrentBillingMode
 
 func ExecuteUpdate(dbmgr *client.DynamoDBManager, tableName string, paramRcu string, paramWcu string, switchToOnDemand bool, switchToProvisioned bool) error {
-	billingMode, rcu, wcu, err := GetCurrentBillingModeClient(manager, tableName)
+	billingMode, rcu, wcu, err := GetCurrentBillingModeClient(dbmgr, tableName)
 	if err != nil {
 		dbmgr.Logger.Errorf("Failed to get the bbilling mode info of table:%s : as current billing mode due to error:%v", tableName, err)
 		return errors.New("Failed to update the table!")
@@ -25,7 +24,7 @@ func ExecuteUpdate(dbmgr *client.DynamoDBManager, tableName string, paramRcu str
 
 	if switchToOnDemand {
 		if billingMode != "PAY_PER_REQUEST" {
-			return SwitchToOnDemandCapacityClient(manager, tableName)
+			return SwitchToOnDemandCapacityClient(dbmgr, tableName)
 		} else {
 			dbmgr.Logger.Warn("No need to switch, as it already is on demand mode!")
 			return nil
@@ -37,7 +36,7 @@ func ExecuteUpdate(dbmgr *client.DynamoDBManager, tableName string, paramRcu str
 		}
 
 		if paramRcu == "" && paramWcu == "" {
-			return UpdateProvisionedCapacityClient(manager, switchToProvisioned, tableName, "", "")
+			return UpdateProvisionedCapacityClient(dbmgr, switchToProvisioned, tableName, "", "")
 		}
 
 		if paramRcu == "" {
@@ -49,7 +48,7 @@ func ExecuteUpdate(dbmgr *client.DynamoDBManager, tableName string, paramRcu str
 		}
 
 		if paramRcu != rcu || paramWcu != wcu {
-			return UpdateProvisionedCapacityClient(manager, switchToProvisioned, tableName, paramRcu, paramWcu)
+			return UpdateProvisionedCapacityClient(dbmgr, switchToProvisioned, tableName, paramRcu, paramWcu)
 		} else {
 			dbmgr.Logger.Warn("No need to update, as it already is provisioned mode or remain the same rcu and wcu!")
 			return nil
