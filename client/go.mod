@@ -3,7 +3,7 @@ module github.com/ForrestIsARealGoodman/dynamodb/client
 go 1.20
 
 require (
-	github.com/ForrestIsARealGoodman/dynamodb/logging v0.0.0-20240215003547-09fa08cc9425
+	github.com/ForrestIsARealGoodman/dynamodb/logging v0.0.0-20240215023114-5d8b2f9364d1
 	github.com/aws/aws-sdk-go-v2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.28.0
