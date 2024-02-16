@@ -69,6 +69,7 @@ func NewLogger(level ...string) (*Logger, error) {
 	return &LoggerObj, err
 }
 
+// format msg to remove newline character
 func (l Logger) sanitize(msg string) string {
 	sanitizedMsg := strings.ReplaceAll(msg, "\n", "")
 	sanitizedMsg = strings.ReplaceAll(sanitizedMsg, "\r", "")
