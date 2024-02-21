@@ -2,7 +2,7 @@ module github.com/ForrestIsARealGoodman/dynamodb-manager/update
 
 go 1.20
 
-require github.com/ForrestIsARealGoodman/dynamodb-manager/client v0.0.0-20240221103134-ced37a4ed284
+require github.com/ForrestIsARealGoodman/dynamodb-manager/client v0.0.0-20240221103710-d8d0b92cd108
 
 require (
 	github.com/ForrestIsARealGoodman/dynamodb-manager/logging v0.0.0-20240221102801-90c8c4ef4e1f // indirect

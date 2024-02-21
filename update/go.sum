@@ -1,5 +1,5 @@
-github.com/ForrestIsARealGoodman/dynamodb-manager/client v0.0.0-20240221103134-ced37a4ed284 h1:4vZ1dLms6icu/R7gUiUVN7uT510UMmrWtZ9+Ei18BYE=
-github.com/ForrestIsARealGoodman/dynamodb-manager/client v0.0.0-20240221103134-ced37a4ed284/go.mod h1:lpXuvuO6Vn04MidT5rH/ssED4F+yIXsfemfuyZJ9axI=
+github.com/ForrestIsARealGoodman/dynamodb-manager/client v0.0.0-20240221103710-d8d0b92cd108 h1:Bimd/6QvhFiflOEhHDoeGQIk9VSds1RbolR5PEBLfk4=
+github.com/ForrestIsARealGoodman/dynamodb-manager/client v0.0.0-20240221103710-d8d0b92cd108/go.mod h1:lpXuvuO6Vn04MidT5rH/ssED4F+yIXsfemfuyZJ9axI=
 github.com/ForrestIsARealGoodman/dynamodb-manager/logging v0.0.0-20240221102801-90c8c4ef4e1f h1:Ilgtt0Qk7cIRy4eU73KtVJ5viMrhCs12HVdKS9fapM4=
 github.com/ForrestIsARealGoodman/dynamodb-manager/logging v0.0.0-20240221102801-90c8c4ef4e1f/go.mod h1:/75N+Bs7634WYLieC/OYqrRU3CrKKMGjM1DnTjTrM3A=
 github.com/aws/aws-sdk-go-v2 v1.25.0 h1:sv7+1JVJxOu/dD/sz/csHX7jFqmP001TIY7aytBWDSQ=

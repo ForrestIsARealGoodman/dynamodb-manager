@@ -42,11 +42,11 @@ func ExecuteUpdate(dbmgr *client.DynamoDBManager, tableName string, paramRcu str
 		}
 
 		if paramRcu == "" {
-			paramRcu = fmt.Sprintf("%d", client.DEFAULT_RCU)
+			paramRcu = fmt.Sprintf("%d", client.DefaultRcu)
 		}
 
 		if paramWcu == "" {
-			paramWcu = fmt.Sprintf("%d", client.DEFAULT_WCU)
+			paramWcu = fmt.Sprintf("%d", client.DefaultWcu)
 		}
 
 		if paramRcu != rcu || paramWcu != wcu {
